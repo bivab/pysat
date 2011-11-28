@@ -20,17 +20,23 @@ class Formula(object):
         self.clauses = args
         self.assignment = {}
 
+    def check_clause(self, clause):
+        for v in clause.literals:
+            value = self.assignment.get(v, None)
+            if value == True:
+                return True
+            elif isinstance(v, Negation):
+                value = self.assignment.get(v.var, None)
+                if value == False:
+                    return True
+        return False
     def is_satisfied(self):
         """Check if the formula is satisfied under the current assignment"""
+        sat = True
         if self.assignment is None:
             raise Exception("No assignment given")
         for c in self.clauses:
-            for v in c.literals:
-                if v in self.assignment and self.assignment[v]:
-                    return True
-                if isinstance(v, Negation):
-                    v = v.var
-                    if v in self.assignment and not self.assignment[v]:
-                        return True
-        return False
-
+            sat = sat and self.check_clause(c)
+            if not sat:
+                return False
+        return True

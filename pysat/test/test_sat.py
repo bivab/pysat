@@ -6,13 +6,13 @@ def test_satisfied():
     b = V()
     c = C(a, b)
     f = F(c)
-    assert not f.is_satisfied()
+    assert f.is_satisfied() == False
     f.assignment[a] = True
     f.assignment[b] = False
-    assert f.is_satisfied()
+    assert f.is_satisfied() == True
     f.assignment[a] = False
     f.assignment[b] = True
-    assert f.is_satisfied()
+    assert f.is_satisfied() == True
 
 def test_satisfied_negation():
     a = V()
@@ -20,10 +20,24 @@ def test_satisfied_negation():
     c = C(a, N(b))
     f = F(c)
     f.assignment[b] = True
-    assert not f.is_satisfied()
+    assert f.is_satisfied() == False
     f.assignment[b] = False
-    assert f.is_satisfied()
+    assert f.is_satisfied() == True
     f.assignment[a] = False
     f.assignment[b] = False
-    assert f.is_satisfied()
-    
+    assert f.is_satisfied() == True
+
+def test_multiple_clauses():
+    a = V()
+    b = V()
+    c = V()
+    cs = [C(a, N(b)), C(N(a), c)]
+    f = F(*cs)
+    assert f.is_satisfied() == False
+    f.assignment = {a: True, b:True, c:True}
+    assert f.is_satisfied() == True
+    f.assignment = {a: True, b:True, c:False}
+    assert f.is_satisfied() == False
+
+
+
