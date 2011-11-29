@@ -39,5 +39,26 @@ def test_multiple_clauses():
     f.assignment = {a: True, b:True, c:False}
     assert f.is_satisfied() == False
 
+def test_is_conflicting():
+    a = V()
+    b = V()
+    c1 = C(a, b)
+    c2 = C(N(a), b)
+    f = F(c1, assignment={a:False, b:False})
+    assert f.is_satisfied() == False
+    assert f.is_conflicting() == True
+    f = F(c1, assignment={a:True, b:False})
+    assert f.is_satisfied() == True
+    assert f.is_conflicting() == False
 
+    f = F(c2, assignment={a:False, b:False})
+    assert f.is_satisfied() == True
+    assert f.is_conflicting() == False
+    f = F(c2, assignment={a:True, b:False})
+    assert f.is_satisfied() == False
+    assert f.is_conflicting() == True
+
+    f = F(c2, assignment={a:True})
+    assert f.is_satisfied() == False
+    assert f.is_conflicting() == False
 
