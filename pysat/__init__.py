@@ -62,13 +62,15 @@ class Clause(object):
 
 class Formula(object):
     clauses = []
-
     def __init__(self, *args, **kwargs):
         self.clauses = args
         if 'assignment' in kwargs:
             self.assignment = kwargs['assignment']
         else:
             self.assignment = {}
+        self.vars = set()
+        for c in self.clauses:
+            self.vars = self.vars.union(c.vars)
 
 
     def is_conflicting(self):
@@ -93,3 +95,26 @@ class Formula(object):
 
     def __repr__(self):
         return " and ".join("(%r)" % c for c in self.clauses)
+
+    def choose_free_variable(self):
+        for v in self.vars:
+            if v in self.assignment:
+                continue
+            return v
+        raise Exception
+
+    def dpll(self):
+        #self.unit_propagation()
+        if self.is_satisfied():
+            return self.assignment
+        elif self.is_conflicting():
+            return None
+        v = self.choose_free_variable()
+        self.assignment[v] = True
+        a2 = self.dpll()
+        if a2 is not None:
+            return a2
+        else:
+            self.assignment[v] = False
+            return self.dpll()
+

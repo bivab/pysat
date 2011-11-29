@@ -62,3 +62,28 @@ def test_is_conflicting():
     assert f.is_satisfied() == False
     assert f.is_conflicting() == False
 
+def test_choose_free_variable():
+    a = V()
+    b = V()
+    c = V()
+    c1 = C(a, b)
+    c2 = C(N(a), c)
+    f = F(c1, c2)
+    assert f.choose_free_variable() in [a, b, c]
+    f = F(c1, c2, assignment={a:True})
+    assert f.choose_free_variable() in [b, c]
+    f = F(c1, c2, assignment={a:True, c:False})
+    assert f.choose_free_variable() is b
+    f = F(c1, c2, assignment={a:True, c:False, b:True})
+    py.test.raises(Exception, f, f.choose_free_variable)
+
+def test_dpll():
+    a = V()
+    b = V()
+    c = V()
+    c1 = C(a, b)
+    c2 = C(N(a), c)
+    f = F(c1, c2)
+    assignment = f.dpll()
+    f.assignment = assignment
+    assert f.is_satisfied() == True
