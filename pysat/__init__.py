@@ -2,16 +2,37 @@ class Literal(object):
     pass
 
 class Variable(Literal):
-    pass
+    index = 0
+
+    def __init__(self, name=None):
+        if name is None:
+            name = self.build_name()
+        self.name = name
+
+
+    def __repr__(self):
+        return "%s" % self.name
+
+    def build_name(self):
+        name = "var%d" % Variable.index
+        Variable.index += 1
+        return name
 
 class Negation(Literal):
     def __init__(self, var):
         self.var = var
 
+    def __repr__(self):
+        return "not(%r)" % self.var
+
 class Clause(object):
     literals = []
     def __init__(self, *args):
         self.literals = args
+
+    def __repr__(self):
+        return " or ".join(repr(var) for var in self.literals)
+
 
 class Formula(object):
     clauses = []
@@ -40,3 +61,6 @@ class Formula(object):
             if not sat:
                 return False
         return True
+
+    def __repr__(self):
+        return " and ".join("(%r)" % c for c in self.clauses)
