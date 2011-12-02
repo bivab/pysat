@@ -2,7 +2,7 @@ class Literal(object):
     pass
 
 class Variable(Literal):
-    index = 0
+    index = 1
 
     def __init__(self, name=None):
         if name is None:
@@ -27,10 +27,10 @@ class Negation(Literal):
 
 class Clause(object):
     literals = []
-    def __init__(self, *args):
-        self.literals = args
+    def __init__(self, literals):
+        self.literals = literals
         self.vars = []
-        for l in args:
+        for l in literals:
             if isinstance(l, Negation):
                 self.vars.append(l.var)
             else:
@@ -61,16 +61,14 @@ class Clause(object):
 
 
 class Formula(object):
-    clauses = []
-    def __init__(self, *args, **kwargs):
-        self.clauses = args
-        if 'assignment' in kwargs:
-            self.assignment = kwargs['assignment']
+
+    def __init__(self, clauses, vars, assignment=None):
+        self.clauses = clauses
+        self.variables = vars
+        if assignment is not None:
+            self.assignment = assignment
         else:
             self.assignment = {}
-        self.vars = set()
-        for c in self.clauses:
-            self.vars = self.vars.union(c.vars)
 
 
     def is_conflicting(self):
@@ -97,7 +95,7 @@ class Formula(object):
         return " and ".join("(%r)" % c for c in self.clauses)
 
     def choose_free_variable(self):
-        for v in self.vars:
+        for v in self.variables:
             if v in self.assignment:
                 continue
             return v
