@@ -1,8 +1,12 @@
 class Literal(object):
     pass
 
+names = {'var_count' : 0}
+def get_var_name():
+    global names
+    names['var_count'] += 1
+    return names['var_count']
 class Variable(Literal):
-    index = 1
 
     def __init__(self, name=None):
         if name is None:
@@ -14,9 +18,8 @@ class Variable(Literal):
         return "%s" % self.name
 
     def build_name(self):
-        name = "var%d" % Variable.index
-        Variable.index += 1
-        return name
+        name = get_var_name()
+        return "var%d" % name
 
 class Negation(Literal):
     def __init__(self, var):
@@ -38,11 +41,11 @@ class Clause(object):
 
     def is_satisfied(self, assignment):
         for v in self.literals:
-            value = assignment.get(v, None)
+            value = assignment.get(v, -1)
             if value == True:
                 return True
             elif isinstance(v, Negation):
-                value = assignment.get(v.var, None)
+                value = assignment.get(v.var, -1)
                 if value == False:
                     return True
         return False
@@ -62,31 +65,29 @@ class Clause(object):
 
 class Formula(object):
 
-    def __init__(self, clauses, vars, assignment=None):
+    @property
+    def assignment(self):
+        raise AssertionError, 'not supported'
+
+    def __init__(self, clauses, vars):
         self.clauses = clauses
         self.variables = vars
-        if assignment is not None:
-            self.assignment = assignment
-        else:
-            self.assignment = {}
 
 
-    def is_conflicting(self):
+    def is_conflicting(self, assignment):
         conflicting = False
         for c in self.clauses:
-            conflicting = conflicting or c.is_conflicting(self.assignment)
+            conflicting = conflicting or c.is_conflicting(assignment)
             if conflicting:
                 return True
         return False
 
 
-    def is_satisfied(self):
+    def is_satisfied(self, assignment):
         """Check if the formula is satisfied under the current assignment"""
         sat = True
-        if self.assignment is None:
-            raise Exception("No assignment given")
         for c in self.clauses:
-            sat = sat and c.is_satisfied(self.assignment)
+            sat = sat and c.is_satisfied(assignment)
             if not sat:
                 return False
         return True
@@ -94,25 +95,32 @@ class Formula(object):
     def __repr__(self):
         return " and ".join("(%r)" % c for c in self.clauses)
 
-    def choose_free_variable(self):
+    def choose_free_variable(self, assignment):
         for v in self.variables:
-            if v in self.assignment:
+            if v in assignment:
                 continue
             return v
         raise Exception
 
-    def dpll(self):
-        #self.unit_propagation()
-        if self.is_satisfied():
-            return self.assignment
-        elif self.is_conflicting():
+    def unit_propagation(self, assignment):
+        return assignment.copy()
+
+    def dpll(self, assignment=None):
+        if assignment is None:
+            assignment = {}
+        else:
+            assignment = self.unit_propagation(assignment)
+        if self.is_satisfied(assignment):
+            return assignment
+        elif self.is_conflicting(assignment):
             return None
-        v = self.choose_free_variable()
-        self.assignment[v] = True
-        a2 = self.dpll()
+        v = self.choose_free_variable(assignment)
+        assert isinstance(v, Variable)
+        assignment[v] = True
+        a2 = self.dpll(assignment)
         if a2 is not None:
             return a2
         else:
-            self.assignment[v] = False
-            return self.dpll()
+            assignment[v] = False
+            return self.dpll(assignment)
 

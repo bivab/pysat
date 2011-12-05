@@ -37,4 +37,8 @@ class TestCNF(BaseCNFTest):
     -1 2 0
     1 -2 0
     -1 -2 0"""
+
+    #CNF3 = False, """
+    #p cnf 4 2
+#"""
 TestCNF.define_tests()
