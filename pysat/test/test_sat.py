@@ -119,3 +119,39 @@ def test_variable_ordering():
     c3 = C([N(c), a])
     f = F([c1, c2, c3], [a,b,c])
     assert f.variables == [a, c,b]
+
+def test_unit_propagation():
+    a = V()
+    b = V()
+    c = C([a,b])
+    assignment = {a:False}
+    c.unit_propagation(assignment)
+    assert assignment[b] == True
+
+def test_unit_propagation2():
+    a = V()
+    b = V()
+    c = C([N(a),b])
+    assignment = {a:True}
+    c.unit_propagation(assignment)
+    c = C([N(a),N(b)])
+    assignment = {b:True}
+    c.unit_propagation(assignment)
+    assert assignment[a] == False
+
+def test_unit_propagation3():
+    vars = [V() for x in range(10)]
+    c = C(vars)
+    a = {}
+    assert c.unit_propagation(a) == False
+    assert a == {}
+
+def test_unit_propagation4():
+    vars = [V() for x in range(10)]
+    c = C(vars)
+    a = {}
+    for x in range(len(vars)/2):
+        a[vars[x]] = False
+    b = a.copy()
+    assert c.unit_propagation(a) == False
+    assert a == b

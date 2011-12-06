@@ -65,6 +65,35 @@ class Clause(object):
             return True
         return False
 
+    def unit_propagation(self, assignment):
+        # only propagate if clause is not satisfied
+        if self.is_satisfied(assignment):
+            return False
+        free_literal = None
+        for literal in self.literals:
+            if isinstance(literal, Negation):
+                var = literal.var
+            else:
+                var = literal
+            # var is bound
+            if var in assignment:
+                continue
+            # we have more than one free variable
+            if free_literal is not None:
+                return False
+            free_literal = literal
+
+        # no free variables
+        if free_literal is None:
+            return False
+        if isinstance(free_literal, Negation):
+            assignment[free_literal.var] = False
+        else:
+            assignment[free_literal] = True
+        return True
+
+
+
     def __repr__(self):
         return " or ".join(repr(var) for var in self.literals)
 
@@ -74,10 +103,12 @@ class Formula(object):
     def assignment(self):
         raise AssertionError, 'not supported'
 
-    def __init__(self, clauses, vars):
+    def __init__(self, clauses, vars, sort_vars=True):
         self.clauses = clauses
         self.variables = vars
-        self.sort_variables()
+        self.conflicts = 0
+        if sort_vars:
+            self.sort_variables()
 
     def variable_freqs(self):
         freqs = {}
@@ -102,11 +133,10 @@ class Formula(object):
     def is_conflicting(self, assignment):
         conflicting = False
         for c in self.clauses:
-            conflicting = conflicting or c.is_conflicting(assignment)
+            conflicting |= c.is_conflicting(assignment)
             if conflicting:
                 return True
         return False
-
 
     def is_satisfied(self, assignment):
         """Check if the formula is satisfied under the current assignment"""
@@ -128,24 +158,30 @@ class Formula(object):
         raise Exception
 
     def unit_propagation(self, assignment):
-        return assignment.copy()
+        assign = assignment.copy()
+        change = True
+        while change:
+            change = False
+            for clause in self.clauses:
+                change |= clause.unit_propagation(assign)
+        return assign
 
     def dpll(self, assignment=None):
         if assignment is None:
             assignment = {}
-        else:
-            assignment = self.unit_propagation(assignment)
-        if self.is_satisfied(assignment):
-            return assignment
-        elif self.is_conflicting(assignment):
+        a1 = self.unit_propagation(assignment)
+        if self.is_satisfied(a1):
+            return a1
+        elif self.is_conflicting(a1):
+            self.conflicts += 1
             return None
-        v = self.choose_free_variable(assignment)
+        v = self.choose_free_variable(a1)
         assert isinstance(v, Variable)
-        assignment[v] = True
-        a2 = self.dpll(assignment)
+        a1[v] = True
+        a2 = self.dpll(a1)
         if a2 is not None:
             return a2
         else:
-            assignment[v] = False
-            return self.dpll(assignment)
+            a1[v] = False
+            return self.dpll(a1)
 
