@@ -96,3 +96,26 @@ def test_dpll():
     f = F([c1, c2], [a,b,c])
     assignment = f.dpll()
     assert f.is_satisfied(assignment) == True
+
+def test_variable_freqs():
+    a = V()
+    b = V()
+    c = V()
+    c1 = C([a, b])
+    c2 = C([N(a), c])
+    c3 = C([N(c), a])
+    f = F([c1, c2, c3], [a,b,c])
+    freqs = f.variable_freqs()
+    assert freqs[a] == 3
+    assert freqs[c] == 2
+    assert freqs[b] == 1
+
+def test_variable_ordering():
+    a = V()
+    b = V()
+    c = V()
+    c1 = C([a, b])
+    c2 = C([N(a), c])
+    c3 = C([N(c), a])
+    f = F([c1, c2, c3], [a,b,c])
+    assert f.variables == [a, c,b]

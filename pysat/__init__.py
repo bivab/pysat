@@ -1,3 +1,5 @@
+from pypy.rlib.listsort import TimSort
+
 class Literal(object):
     pass
 
@@ -62,6 +64,9 @@ class Clause(object):
     def __repr__(self):
         return " or ".join(repr(var) for var in self.literals)
 
+class TupleSort(TimSort):
+    def lt(self, a, b):
+        return a[0] < b[0]
 
 class Formula(object):
 
@@ -72,7 +77,27 @@ class Formula(object):
     def __init__(self, clauses, vars):
         self.clauses = clauses
         self.variables = vars
+        self.sort_variables()
 
+    def variable_freqs(self):
+        freqs = {}
+        for v in self.variables:
+            freqs[v] = 0
+        for clause in self.clauses:
+            for literal in clause.literals:
+                if isinstance(literal, Negation):
+                    var = literal.var
+                else:
+                    var = literal
+                freqs[var] += 1
+        return freqs
+
+    def sort_variables(self):
+        freqs = self.variable_freqs()
+        dec = [(freqs[v], v) for v in self.variables]
+        ts = TupleSort(dec)
+        ts.sort()
+        self.variables = [dec[i][1] for i in range(len(dec)-1, -1, -1)]
 
     def is_conflicting(self, assignment):
         conflicting = False
