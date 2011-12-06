@@ -1,5 +1,9 @@
 from pypy.rlib.listsort import TimSort
 
+class TupleSort(TimSort):
+    def lt(self, a, b):
+        return a[0] < b[0]
+
 class Literal(object):
     pass
 
@@ -63,10 +67,6 @@ class Clause(object):
 
     def __repr__(self):
         return " or ".join(repr(var) for var in self.literals)
-
-class TupleSort(TimSort):
-    def lt(self, a, b):
-        return a[0] < b[0]
 
 class Formula(object):
 
