@@ -12,6 +12,9 @@ def main(argv):
     assert os.path.isfile(f)
     formula = CNFParser().parse_file(f)
     assignment = formula.dpll()
+    print '------------------------------------------------------------'
+    print 'Conflicts %d' % formula.conflicts
+    print '------------------------------------------------------------'
     if assignment:
         print 'SATISFIABLE'
     else:
