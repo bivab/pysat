@@ -1,4 +1,5 @@
 import sys, os
+from time import time
 from pysat.parser import CNFParser
 
 def main(argv):
@@ -10,9 +11,17 @@ def main(argv):
         return 2
     f = argv[1]
     assert os.path.isfile(f)
+    parse_start = time()
     formula = CNFParser().parse_file(f)
+    parse_end = time()
+    solve_start = time()
     assignment = formula.dpll()
+    solve_end = time()
+
     print '------------------------------------------------------------'
+    print 'Runtime %d ms' % int((solve_end - parse_start) * 1000)
+    print 'Parser %d ms' % int((parse_end - parse_start) * 1000)
+    print 'DPLL %d ms' % int((solve_end - solve_start) * 1000)
     print 'Conflicts %d' % formula.conflicts
     print '------------------------------------------------------------'
     if assignment:
